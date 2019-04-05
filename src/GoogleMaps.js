@@ -13,11 +13,10 @@ class GoogleMaps extends Component {
     fourthUserLocation: { lat: 33, lng: 33 },
     opponentName: '',
     playerIsAlive: false,
+    
 
     loading: true
   };
-
-
 
 
   componentDidMount(props) {
@@ -33,7 +32,7 @@ class GoogleMaps extends Component {
       var db = fire.database();
       var secondPlayer = db.ref().child(arrOfOpponents[0])
       
-
+      
       
       secondPlayer
         .once("value")
