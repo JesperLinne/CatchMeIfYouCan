@@ -31,3 +31,149 @@
     transform: rotate(360deg);
   }
 }
+body {
+  background-color: white;
+  width: 100%;
+}
+button {
+  display: flex;
+  margin: 10px;
+  justify-content: space-around;
+  border: 20px solid white;
+  border-radius: 10px;
+  padding: 15px 20px;
+  color: black;
+  font-family: "Lucida Console";
+  font-weight: bold;
+  background-color: white;
+  cursor: pointer;
+  opacity: 0.8;
+  outline: 0;
+}
+
+#center-container {
+  display: flex;
+  justify-content: center;
+}
+
+ #center {
+  padding: 6px;
+  border-radius: 200px;
+  position: fixed;
+  bottom: 2px;
+  border: none;
+  
+}
+
+#exit-container{
+  display: flex;
+  position: absolute;
+  right: 5px;
+  top: 2px;
+}
+
+#exit {
+  border-radius: 50%;
+  padding-top: 0px;
+  padding-bottom: 0;
+  padding-right: 1px;
+  padding-left: 1px;
+}
+
+#musicWrapper{
+  display: flex;
+}
+
+#musicButton{
+  padding: 6px;
+  border-radius: 200px;
+  position: fixed;
+  bottom: 20px;
+  border: none;
+}
+
+i {
+  font-size: 20px;
+}
+
+.fa-bullseye {
+  font-size: 35px;
+}
+
+
+.headerWrapper {
+  /*  border-bottom: 50px; */
+  margin-bottom: 5vh;
+}
+
+.buttonWrapper {
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: stretch;
+  bottom: 5%;
+}
+
+button:hover {
+  opacity: 1;
+}
+h1 {
+  font-family: "Lucida Console";
+  font-weight: bold;
+  text-align: center;
+  font-size: 40px;
+}
+
+
+.taken-character {
+  background-color: rgb(187, 185, 185);
+  border: black 1px solid;
+  border-radius: 10px;
+  opacity: .6;
+}
+
+.takenCharText {
+  display: inline-block;
+  text-align: left;
+  margin-left: 10%;
+  margin-top: 18px;;
+}
+
+
+.mapStyle {
+  height: 10vh;
+  width: 10vw;
+}
+
+.mapWrapper {
+  height: 55vh;
+}
+
+.button-wrapper {
+  background-color: #44bd32;
+  border: black 1px solid;
+  border-radius: 10px;
+
+}
+
+.mapButtonWrapper button{
+  background-color: green;
+  display: flex;
+  flex-direction: row;
+}
+
+img.del {
+  display: inline-block;
+  cursor: pointer;
+  margin-left: 10px;
+  margin-right: 5%;
+  position: relative;
+  height: 50px;
+  width: 50px;
+}
+
+.astext {
+  display: inline-block;
+  text-align: left;
+  margin-left: 10%;
+  margin-top: 18px;;
+}

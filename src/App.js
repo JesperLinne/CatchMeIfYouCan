@@ -3,7 +3,27 @@ import "./App.css";
 import GoogleMaps from "./GoogleMaps.js";
 import fire from "./firebase.js";
 
-const arrOfPlayers = ["player1", "player2", "player3", "player4"];
+const arrOfPlayers = [
+  {
+    name: "DrFEEL",
+    img:
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTnpuDospBunSKgm8DaWf3boJSVKnuomTb4d0ccCP3Afg87F2So"
+  },
+  {
+    name: "BadBABIE",
+    img:
+      "https://www.nicepng.com/png/full/314-3146783_report-abuse-bhad-bhabie-fuck-you.png"
+  },
+  {
+    name: "SteveHARVEY",
+    img: "https://t2.rbxcdn.com/b7f927ebbfe4c027fc11cc7d844a34c5"
+  },
+  {
+    name: "JerrySPRINGER",
+    img:
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Jerry_Springer_at_Emory_%28cropped%29.jpg/170px-Jerry_Springer_at_Emory_%28cropped%29.jpg"
+  }
+];
 
 export default class App extends Component {
   constructor() {
@@ -13,11 +33,10 @@ export default class App extends Component {
       playerName: "",
       loggedIn: false,
       lastActivity: 0,
-      isOn: false,
-      player1: { loggedIn: false },
-      player2: { loggedIn: false },
-      player3: { loggedIn: false },
-      player4: { loggedIn: false }
+      DrFEEL: { loggedIn: false, catched: false },
+      BadBABIE: { loggedIn: false, catched: false },
+      SteveHARVEY: { loggedIn: false, catched: false },
+      JerrySPRINGER: { loggedIn: false, catched: false }
     };
   }
 
@@ -26,24 +45,23 @@ export default class App extends Component {
       clicked: true,
       playerName: name,
       loggedIn: true,
-      lastActivity: new Date(),
-      isOn: true
+      catched: false
     });
   }
   componentDidMount() {
     const db = fire.database();
 
     setInterval(() => {
-      arrOfPlayers.forEach(playername =>
+      arrOfPlayers.forEach(player =>
         db
           .ref()
-          .child(playername)
+          .child(player.name)
           .once("value")
           .then(snapshot => snapshot.val())
-          .then(player => {
+          .then(resultDB => {
             this.setState({
-              [playername]: {
-                loggedIn: player.loggedIn
+              [player.name]: {
+                loggedIn: resultDB.loggedIn
               }
             });
           })
@@ -54,35 +72,46 @@ export default class App extends Component {
   logOut() {
     this.setState({
       loggedIn: false,
-      isOn: false
     });
   }
 
   render() {
-    console.log("player1", this.state.player1, "player2", this.state.player2);
-
-    const buttons = arrOfPlayers.map(playerInArr => {
-      if (!this.state[playerInArr].loggedIn) {
+    const buttons = arrOfPlayers.map((playerInArr, i) => {
+      if (!this.state[playerInArr.name].loggedIn) {
         return (
-          <button onClick={this.onClickButton.bind(this, playerInArr)}>
-            {playerInArr}
+          <button className='button-wrapper' onClick={this.onClickButton.bind(this, playerInArr.name)}>
+            <span class="astext">{playerInArr.name}</span>
+            <img src={playerInArr.img} class="del" />
           </button>
         );
       } else {
-        return <button>{playerInArr} is Taken</button>;
+        return <button className='taken-character'><span className='takenCharText'>{playerInArr.name} is Taken</span> <img src={playerInArr.img} class="del" /></button>;
       }
     });
 
     return (
       <div>
+
+      
+
         {/* lägg till att det ska vara sant att den är klickad och spelaren inte är upptagen */}
         {this.state.clicked && this.state.loggedIn ? (
+          <div>
+          
           <GoogleMaps
             playerName={this.state.playerName}
             logOut={this.logOut.bind(this)}
+            arrOfPlayers={arrOfPlayers}
+            
           />
+          </div>
         ) : (
-            <div> {buttons}</div>
+            <div>
+              <div className="headerWrapper">
+                <h1>TRy CATcH Me OUtSIde</h1>
+              </div>
+              <div className="buttonWrapper"> {buttons}</div>
+            </div>
           )}
       </div>
     );
