@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import './App.css';
-import { Map, Marker, Circle, GoogleApiWrapper } from 'google-maps-react';
+import { Map, InfoWindow, Marker, Circle, GoogleApiWrapper } from 'google-maps-react';
 import fire from './firebase.js';
 
 
@@ -11,39 +11,50 @@ class GoogleMap extends Component {
     super(props)
 
     this.state = {
-      userLocation: { lat: 32, lng: 32 },
+      userLocation: { lat: 65, lng: -18 },
       playerName: null,
-      opponent1Loc: { lat: 32, lng: 32 },
+      opponent1Loc: { lat: 65, lng: -18 },
+      opponent1loggedIn: false,
       lastActivity: new Date(),
-      opponent2Loc: { lat: 32, lng: 32 },
-      opponent3Loc: { lat: 32, lng: 32 },
+      opponent2Loc: { lat: 65, lng: -18 },
+      opponent2loggedIn: false,
+      opponent3Loc: { lat: 65, lng: -18 },
+      opponent3loggedIn: false,
       loggedIn: false,
       loading: true,
       map: null,
       opponentName: [
-        { name: "DrFEEL", img: "" },
-        { name: "BadBABIE", img: "" },
-        { name: "SteveHARVEY", img: "" },
-        { name: "JerrySPRINGER", img: "" }
+        { name: "Police", img: "" },
+        { name: "BlackThief", img: "" },
+        { name: "RedThief", img: "" },
+        { name: "YellowThief", img: "" }
       ],
-      yourName: [{ name: "", img: "" }]
+      yourName: [{ name: "", img: "" }],
     };
+  }
+
+  componentWillUnmount() {
+    console.log('unmounting googlemaps');
+    clearInterval(this.interval);
+    navigator.geolocation.clearWatch(this.nav);
   }
 
   panToTest(userLocation) {
     this.state.map.panTo(userLocation);
   }
 
-  getOpponentInfo(opponent, opponentLoc) {
+  getOpponentInfo(opponent, opponentName) {
     opponent
       .once("value")
       .then(snapshot => snapshot.val())
       .then(player => {
+
         this.setState({
-          [opponentLoc]: {
+          [opponentName + "Loc"]: {
             lat: player.location.lat,
             lng: player.location.lng
-          }
+          },
+          [opponentName + "loggedIn"]: player.loggedIn
         });
       });
   }
@@ -58,78 +69,81 @@ class GoogleMap extends Component {
       });
 
     this.setState({ lastActivity: new Date(), loggedIn: true });
+
   }
 
   logOut(props) {
+    this.setState({ loggedIn: false, visible:false });
+    navigator.geolocation.clearWatch(this.nav);
+    clearInterval(this.interval);
     fire
       .database()
       .ref(this.props.playerName)
       .update({
         loggedIn: false,
         lastActivity: this.state.lastActivity,
+        location: { lat: 65, lng: -18 }
       });
 
-    clearInterval(this.interval);
+
 
     this.props.logOut.call(this);
 
   }
   logOut1(props) {
-    if(this.state.nearByopponent1 === true) {
-    fire
-      .database()
-      .ref("BadBABIE")
-      .update({
-        loggedIn: false,
-        lastActivity: this.state.lastActivity,
-      });
-
+    navigator.geolocation.clearWatch(this.nav);
     clearInterval(this.interval);
-  }
+    if (this.state.nearByopponent1 === true) {
+      fire
+        .database()
+        .ref("BlackThief")
+        .update({
+          loggedIn: false,
+          lastActivity: this.state.lastActivity,
+          inPrison: true,
+
+        });
+
+    }
 
   }
+
+
   logOut2(props) {
-    if(this.state.nearByopponent2 === true) {
-    fire
-      .database()
-      .ref("SteveHARVEY")
-      .update({
-        loggedIn: false,
-        lastActivity: this.state.lastActivity,
-      });
-
+    navigator.geolocation.clearWatch(this.nav);
     clearInterval(this.interval);
-  }
+    if (this.state.nearByopponent2 === true) {
+      fire
+        .database()
+        .ref("RedThief")
+        .update({
+          loggedIn: false,
+          lastActivity: this.state.lastActivity,
+          inPrison: true,
+        });
+
+      clearInterval(this.interval);
+    }
 
   }
   logOut3(props) {
-    if(this.state.nearByopponent3 === true) {
-    fire
-      .database()
-      .ref("JerrySPRINGER")
-      .update({
-        loggedIn: false,
-        lastActivity: this.state.lastActivity,
-      });
-
+    navigator.geolocation.clearWatch(this.nav);
     clearInterval(this.interval);
-  }
+    if (this.state.nearByopponent3 === true) {
+      fire
+        .database()
+        .ref("YellowThief")
+        .update({
+          loggedIn: false,
+          lastActivity: this.state.lastActivity,
+          inPrison: true,
+        });
+
+      clearInterval(this.interval);
+    }
 
   }
 
-  logOutOtherPLayer(props) {
-    fire
-      .database()
-      .ref(this.props.playerName)
-      .update({
-        loggedIn: false,
-        lastActivity: this.state.lastActivity,
-      });
-
-    clearInterval(this.interval);
-
-    this.props.logOut.call(this);
-  }
 
   onReady(mapProps, map) {
     this.setState({
@@ -444,7 +458,6 @@ class GoogleMap extends Component {
 
 
 
-
   componentDidMount(props) {
     this.logIn();
     let arrOfOpponents = this.props.arrOfPlayers.filter(name => name.name !== this.props.playerName);
@@ -464,12 +477,14 @@ class GoogleMap extends Component {
 
 
 
-    navigator.geolocation.watchPosition(
+    this.nav = navigator.geolocation.watchPosition(
       position => {
         const { latitude, longitude } = position.coords;
 
         this.interval = setInterval(() => {
-
+          if (!this.state.loggedIn) {
+            return false;
+          }
 
           this.setState({
             userLocation: { lat: latitude, lng: longitude },
@@ -481,21 +496,33 @@ class GoogleMap extends Component {
             loggedIn: this.state.loggedIn
           });
 
-          this.getOpponentInfo(opponent1, "opponent1Loc");
-          this.getOpponentInfo(opponent2, "opponent2Loc");
-          this.getOpponentInfo(opponent3, "opponent3Loc");
+
+
+
+
+
+
+
+          this.getOpponentInfo(opponent1, "opponent1");
+          this.getOpponentInfo(opponent2, "opponent2");
+          this.getOpponentInfo(opponent3, "opponent3");
 
           // Skickar location till firebase
 
           const item = {
             location: this.state.userLocation,
           }
-          firebaseRef.update(item);
+
+          if (this.state.loggedIn == true) {
+            firebaseRef.update(item);
+
+          }
+
 
 
           let latDif1 = this.state.userLocation.lat - this.state.opponent1Loc.lat
           let lngDif1 = this.state.userLocation.lng - this.state.opponent1Loc.lng
-          if ((latDif1 < 0.001 && latDif1 > -0.001) && (lngDif1 < 0.001 && lngDif1 > -0.001) && (this.state.playerName === "DrFEEL")) {
+          if ((latDif1 < 0.001 && latDif1 > -0.001) && (lngDif1 < 0.001 && lngDif1 > -0.001) && (this.state.playerName === "Police")) {
             this.setState({
               color: "#FF0000",
               nearByopponent1: true,
@@ -510,7 +537,7 @@ class GoogleMap extends Component {
 
           let latDif2 = this.state.userLocation.lat - this.state.opponent2Loc.lat
           let lngDif2 = this.state.userLocation.lng - this.state.opponent2Loc.lng
-          if ((latDif2 < 0.001 && latDif2 > -0.001) && (lngDif2 < 0.001 && lngDif2 > -0.001) && (this.state.playerName === "DrFEEL")) {
+          if ((latDif2 < 0.001 && latDif2 > -0.001) && (lngDif2 < 0.001 && lngDif2 > -0.001) && (this.state.playerName === "Police")) {
             this.setState({
               color: "#FF0000",
               nearByopponent2: true,
@@ -526,7 +553,7 @@ class GoogleMap extends Component {
 
           let latDif3 = this.state.userLocation.lat - this.state.opponent3Loc.lat
           let lngDif3 = this.state.userLocation.lng - this.state.opponent3Loc.lng
-          if ((latDif3 < 0.001 && latDif3 > -0.001) && (lngDif3 < 0.001 && lngDif3 > -0.001) && (this.state.playerName === "DrFEEL")) {
+          if ((latDif3 < 0.001 && latDif3 > -0.001) && (lngDif3 < 0.001 && lngDif3 > -0.001) && (this.state.playerName === "Police")) {
             this.setState({
               color: "#FF0000",
               nearByopponent3: true,
@@ -552,15 +579,6 @@ class GoogleMap extends Component {
 
   render() {
 
-    this.checkForLogout()
-    this.checkForInactivity();
-
-
-    //console.log(Date.now() - this.state.lastActivity);
-    
-
-    
-
     if (Date.now() - this.state.lastActivity > 60000 && Date.now() - this.state.lastActivity < 61000) {
       window.confirm('Are you AFK? After 20 min of inactivity, you will be KICKED OUT');
     }
@@ -570,9 +588,14 @@ class GoogleMap extends Component {
       userLocation,
       opponent1Loc,
       opponent2Loc,
-      opponent3Loc
+      opponent3Loc,
+      opponent1loggedIn,
+      opponent2loggedIn,
+      opponent3loggedIn,
     } = this.state;
     const { google } = this.props;
+
+
 
     if (loading) {
       return null;
@@ -580,10 +603,6 @@ class GoogleMap extends Component {
 
     return (
       <div>
-      <div>
-      </div>
-
-
         <Map
           onDragstart={this.updateLastactivity.bind(this)}
           google={google}
@@ -592,6 +611,7 @@ class GoogleMap extends Component {
           fullscreenControl={false}
           onReady={this.onReady.bind(this)}
           mapTypeControl={false}
+          fullscreenControl={false}
           streetViewControl={false}
         >
           <div className="headerWrapper">
@@ -609,9 +629,11 @@ class GoogleMap extends Component {
             icon={{
               url: this.state.yourName[0].img,
               anchor: new google.maps.Point(12, 12),
-              scaledSize: new google.maps.Size(24, 24)
+              scaledSize: new google.maps.Size(24, 24),
+              
             }}
             position={userLocation}
+            visibility={false}
           />
 
           <Marker
@@ -622,8 +644,9 @@ class GoogleMap extends Component {
             }}
 
             position={opponent1Loc} onClick={this.logOut1.bind(this)}
-                             
-              
+            visible={opponent1loggedIn}
+
+
           />
 
           <Marker
@@ -634,6 +657,7 @@ class GoogleMap extends Component {
             }}
 
             position={opponent2Loc} onClick={this.logOut2.bind(this)}
+            visible={opponent2loggedIn}
 
           />
 
@@ -646,12 +670,12 @@ class GoogleMap extends Component {
             }}
 
             position={opponent3Loc} onClick={this.logOut3.bind(this)}
-            
-              
-                
-               /*  console.log('Hes clicked'); */
-              
-            
+            visible={opponent3loggedIn}
+
+
+          /*  console.log('Hes clicked'); */
+
+
           />
           <div id='exit-container'>
             <button onClick={this.logOut.bind(this)} id='exit'><i class="fas fa-times"></i></button>
@@ -664,9 +688,9 @@ class GoogleMap extends Component {
             </button>
           </div>
 
-          
+
         </Map>
-        
+
 
       </div>
     );
